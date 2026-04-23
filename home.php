@@ -23,7 +23,6 @@ $phone      = $_SESSION['phone'] ?? '';
 $products = [];
 $apiError = '';
 
-// Use the IP shown by your Flask app
 $apiUrl = "http://host.docker.internal:5000/api/products";
 
 if (!function_exists('curl_init')) {
@@ -79,6 +78,25 @@ if ($search !== '') {
         .glyphicon .badge .navbar { font-size: 17px; }
         .navbar { font-size: 17px; }
         .badge { font-size: 17px; }
+        .product-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-bottom: 1px solid #ddd;
+        }
+        .no-image {
+            width: 100%;
+            height: 220px;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            border-bottom: 1px solid #ddd;
+        }
+        .thumbnail {
+            min-height: 420px;
+        }
     </style>
 </head>
 <body>
@@ -139,20 +157,33 @@ if ($search !== '') {
                 <?php foreach ($products as $row): ?>
                     <div class="item col-lg-4 col-md-6 col-sm-12">
                         <div class="thumbnail">
-                            <div class="caption" style="height:170px;">
+                            <?php if (!empty($row["image"])): ?>
+                                <img
+                                    class="product-image"
+                                    src="data:image/jpeg;base64,<?= $row["image"]; ?>"
+                                    alt="<?= htmlspecialchars($row["name"] ?? '') ?>"
+                                >
+                            <?php else: ?>
+                                <div class="no-image">No Image</div>
+                            <?php endif; ?>
+
+                            <div class="caption">
                                 <h4 class="list-group-item-heading">
                                     <?= htmlspecialchars($row["name"] ?? '') ?>
                                 </h4>
+
                                 <p class="list-group-item-text" style="padding-bottom:10px">
                                     Inventory product
                                 </p>
+
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <p>Rating: NA</p>
+                                        <p>Quantity: <?= htmlspecialchars((string)($row["quantity"] ?? '0')) ?></p>
                                         <p class="lead">
                                             <?= 'Rs. ' . htmlspecialchars((string)($row["price"] ?? '0')) ?>
                                         </p>
                                     </div>
+
                                     <div class="col-md-6">
                                         <a class="btn btn-success"
                                            href="cartAction.php?action=addToCart&id=<?= urlencode((string)($row["id"] ?? '')) ?>">
