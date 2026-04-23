@@ -20,15 +20,45 @@ $active     = $_SESSION['active'] ?? '';
 $address    = $_SESSION['address'] ?? '';
 $phone      = $_SESSION['phone'] ?? '';
 
-// API URL
+$products = [];
+$apiError = '';
+
+// Use the IP shown by your Flask app
 $apiUrl = "http://host.docker.internal:5000/api/products";
-$response = @file_get_contents($apiUrl);
-$products = $response ? json_decode($response, true) : [];
+
+if (!function_exists('curl_init')) {
+    $apiError = "PHP cURL extension is not enabled in the container.";
+} else {
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $apiUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+    $response = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    curl_close($ch);
+
+    if ($response === false) {
+        $apiError = "API request failed: " . $curlError;
+    } else {
+        $decoded = json_decode($response, true);
+
+        if ($httpCode !== 200) {
+            $apiError = "API returned HTTP status " . $httpCode;
+        } elseif (!is_array($decoded)) {
+            $apiError = "Invalid API response.";
+        } else {
+            $products = $decoded;
+        }
+    }
+}
 
 $search = trim($_POST['search'] ?? '');
 if ($search !== '') {
     $products = array_filter($products, function ($p) use ($search) {
-        return stripos($p['name'], $search) !== false;
+        return isset($p['name']) && stripos($p['name'], $search) !== false;
     });
 }
 ?>
@@ -36,7 +66,7 @@ if ($search !== '') {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Welcome <?= htmlspecialchars($first_name . ' ' . $last_name) ?></title>
+    <title>Welcome <?= htmlspecialchars(trim($first_name . ' ' . $last_name)) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="./js/jquery.min.js"></script>
@@ -84,7 +114,13 @@ if ($search !== '') {
 
     <div class="container">
         <form action="" method="post" class="cf">
-            <input type="text" name="search" placeholder="Is it me you’re looking for?" style="border-radius:8px; border-bottom:2px solid black;">
+            <input
+                type="text"
+                name="search"
+                value="<?= htmlspecialchars($search) ?>"
+                placeholder="Is it me you’re looking for?"
+                style="border-radius:8px; border-bottom:2px solid black;"
+            >
             <button type="submit" style="border:none;"><i class="fa fa-search"></i></button>
         </form>
 
@@ -92,21 +128,36 @@ if ($search !== '') {
         <h1>Products</h1>
         <br>
 
+        <?php if ($apiError !== ''): ?>
+            <div class="alert alert-danger">
+                <?= htmlspecialchars($apiError) ?>
+            </div>
+        <?php endif; ?>
+
         <div id="products" class="row list-group">
             <?php if (!empty($products)): ?>
                 <?php foreach ($products as $row): ?>
-                    <div class="item col-lg-4">
+                    <div class="item col-lg-4 col-md-6 col-sm-12">
                         <div class="thumbnail">
                             <div class="caption" style="height:170px;">
-                                <h4 class="list-group-item-heading"><?= htmlspecialchars($row["name"]); ?></h4>
-                                <p class="list-group-item-text" style="padding-bottom:10px">Inventory product</p>
+                                <h4 class="list-group-item-heading">
+                                    <?= htmlspecialchars($row["name"] ?? '') ?>
+                                </h4>
+                                <p class="list-group-item-text" style="padding-bottom:10px">
+                                    Inventory product
+                                </p>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <p>Rating: NA</p>
-                                        <p class="lead"><?= 'Rs. ' . htmlspecialchars($row["price"]); ?></p>
+                                        <p class="lead">
+                                            <?= 'Rs. ' . htmlspecialchars((string)($row["price"] ?? '0')) ?>
+                                        </p>
                                     </div>
                                     <div class="col-md-6">
-                                        <a class="btn btn-success" href="cartAction.php?action=addToCart&id=<?= $row["id"]; ?>">Add to cart</a>
+                                        <a class="btn btn-success"
+                                           href="cartAction.php?action=addToCart&id=<?= urlencode((string)($row["id"] ?? '')) ?>">
+                                            Add to cart
+                                        </a>
                                     </div>
                                 </div>
                             </div>
