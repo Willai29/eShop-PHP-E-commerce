@@ -1,110 +1,115 @@
 <?php
 session_start();
 
-// initialize shopping cart class
 include 'Cart.php';
 $cart = new Cart;
 
-// include database configuration file
 include 'dbConfig.php';
 
-if(isset($_REQUEST['action']) && !empty($_REQUEST['action'])){
+function getInventoryProductById($productID) {
+    $apiUrl = "http://host.docker.internal:5000/api/products";
 
-    if($_REQUEST['action'] == 'addToCart' && !empty($_REQUEST['id'])){
-        $productID = (int)$_REQUEST['id'];
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $apiUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
-        // get product details from API
-        $apiUrl = "http://host.docker.internal:5000/api/products";
-        $response = @file_get_contents($apiUrl);
-        $products = $response ? json_decode($response, true) : [];
+    $response = curl_exec($ch);
+    curl_close($ch);
 
-        $row = null;
-        foreach($products as $product){
-            if((int)$product['id'] === $productID){
-                $row = $product;
-                break;
-            }
+    if (!$response) {
+        return null;
+    }
+
+    $products = json_decode($response, true);
+
+    if (!is_array($products)) {
+        return null;
+    }
+
+    foreach ($products as $product) {
+        if (isset($product['id']) && (int)$product['id'] === (int)$productID) {
+            return $product;
         }
+    }
 
-        if($row){
-            $itemData = array(
-                'id' => $row['id'],
-                'name' => $row['name'],
-                'price' => $row['price'],
-                'qty' => 1
-            );
+    return null;
+}
 
-            $insertItem = $cart->insert($itemData);
-            $redirectLoc = $insertItem ? 'home.php' : 'index.php';
-            header("Location: ".$redirectLoc);
-            exit();
-        }else{
+function deductInventoryQuantity($productID, $qty = 1) {
+    $deductUrl = "http://host.docker.internal:5000/api/products/" . $productID . "/deduct";
+
+    $ch = curl_init($deductUrl);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(["qty" => $qty]));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    curl_close($ch);
+
+    return $httpCode === 200;
+}
+
+if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
+
+    if ($_REQUEST['action'] == 'addToCart' && !empty($_REQUEST['id'])) {
+
+        $productID = (int)$_REQUEST['id'];
+        $row = getInventoryProductById($productID);
+
+        if ($row === null) {
             header("Location: home.php");
             exit();
         }
 
-    }elseif($_REQUEST['action'] == 'updateCartItem' && !empty($_REQUEST['id'])){
-        $itemData = array(
-            'rowid' => $_REQUEST['id'],
-            'qty' => $_REQUEST['qty']
-        );
-        $updateItem = $cart->update($itemData);
-        echo $updateItem ? 'ok' : 'err';
-        die;
-
-    }elseif($_REQUEST['action'] == 'removeCartItem' && !empty($_REQUEST['id'])){
-        $deleteItem = $cart->remove($_REQUEST['id']);
-        header("Location: viewCart.php");
-        exit();
-
-    }elseif($_REQUEST['action'] == 'placeOrder' && $cart->total_items() > 0 && !empty($_SESSION['sessCustomerID'])){
-        // insert order details into MySQL database
-        $insertOrder = $db->query("INSERT INTO orders (customer_id, total_price, created, modified) VALUES ('".$_SESSION['sessCustomerID']."', '".$cart->total()."', '".date("Y-m-d H:i:s")."', '".date("Y-m-d H:i:s")."')");
-
-        if($insertOrder){
-            $orderID = $db->insert_id;
-            $sql = '';
-
-            // get cart items
-            $cartItems = $cart->contents();
-            foreach($cartItems as $item){
-                $sql .= "INSERT INTO order_items (order_id, product_id, quantity) VALUES ('".$orderID."', '".$item['id']."', '".$item['qty']."');";
-            }
-
-            // insert order items into MySQL
-            $insertOrderItems = $db->multi_query($sql);
-
-            if($insertOrderItems){
-                $cart->destroy();
-                header("Location: orderSuccess.php?id=$orderID");
-                exit();
-            }else{
-                header("Location: checkout.php");
-                exit();
-            }
-        }else{
-            header("Location: checkout.php");
+        if ((int)$row['quantity'] <= 0) {
+            header("Location: home.php");
             exit();
         }
 
-    }else if($_REQUEST['action'] == 'placeOrder1'){
-        $orderID = $db->query("SELECT max(id) as maximum from orders");
-        $row = mysqli_fetch_array($orderID);
-        $r = $row['maximum'];
-        header("Location: review.php?id=$r");
+        $itemData = array(
+            'id'    => $row['id'] ?? $productID,
+            'name'  => $row['name'] ?? 'Unknown Product',
+            'price' => $row['price'] ?? 0,
+            'qty'   => 1
+        );
+
+        $insertItem = $cart->insert($itemData);
+
+        if ($insertItem) {
+            deductInventoryQuantity($productID, 1);
+        }
+
+        header("Location: " . ($insertItem ? "viewCart.php" : "home.php"));
         exit();
 
-    }else if($_REQUEST['action'] == 'placeOrder2'){
-        $orderID = $_GET['id'];
-        echo $orderID;
+    } elseif ($_REQUEST['action'] == 'updateCartItem' && !empty($_REQUEST['id'])) {
+
+        $itemData = array(
+            'rowid' => $_REQUEST['id'],
+            'qty'   => $_REQUEST['qty']
+        );
+
+        $updateItem = $cart->update($itemData);
+        echo $updateItem ? 'ok' : 'err';
         exit();
 
-    }else{
+    } elseif ($_REQUEST['action'] == 'removeCartItem' && !empty($_REQUEST['id'])) {
+
+        $cart->remove($_REQUEST['id']);
+        header("Location: viewCart.php");
+        exit();
+
+    } else {
         header("Location: home.php");
         exit();
     }
 
-}else{
+} else {
     header("Location: home.php");
     exit();
 }

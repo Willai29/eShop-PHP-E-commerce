@@ -3,89 +3,97 @@ session_start();
 session_unset();
 session_destroy();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Logged Out</title>
+<meta charset="UTF-8">
+<title>Logging Out...</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="styles.css">
+<!-- Auto redirect after 2 seconds -->
+<meta http-equiv="refresh" content="2;url=index.php">
 
-    <style>
-        .logout-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-        }
+<link rel="stylesheet" href="styles.css">
 
-        .logout-card {
-            width: 430px;
-            background: #fff;
-            border-radius: 28px;
-            padding: 42px 35px;
-            text-align: center;
-            box-shadow: 0 18px 45px rgba(0,0,0,0.12);
-        }
+<style>
+.logout-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f3f6fb, #eef2f7);
+}
 
-        .logout-icon {
-            width: 78px;
-            height: 78px;
-            margin: 0 auto 18px;
-            border-radius: 24px;
-            background: linear-gradient(180deg, #4b2cff, #7a5cff);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 34px;
-        }
+.logout-card {
+    width: 420px;
+    background: #fff;
+    border-radius: 28px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+    animation: fadeIn 0.4s ease;
+}
 
-        .logout-card h1 {
-            color: #222;
-            font-size: 26px;
-            font-weight: 800;
-            margin: 0 0 10px;
-        }
+.logout-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 15px;
+    border-radius: 25px;
+    background: linear-gradient(180deg, #4b2cff, #7a5cff);
+    color: #fff;
+    font-size: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        .logout-card p {
-            color: #777;
-            margin: 0 0 26px;
-            font-size: 15px;
-        }
+.logout-card h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
 
-        .logout-btn {
-            display: block;
-            background: #6b4cff;
-            color: #fff;
-            border-radius: 20px;
-            padding: 12px 18px;
-            font-weight: 800;
-            text-decoration: none;
-        }
+.logout-card p {
+    color: #777;
+    margin-bottom: 20px;
+}
 
-        .logout-btn:hover {
-            background: #5038e0;
-            color: #fff;
-            text-decoration: none;
-        }
-    </style>
+.logout-btn {
+    display: block;
+    padding: 12px;
+    border-radius: 20px;
+    background: #6b4cff;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.logout-btn:hover {
+    background: #5038e0;
+    color: #fff;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px);}
+    to { opacity: 1; transform: translateY(0);}
+}
+</style>
 </head>
 
 <body>
+
 <div class="logout-wrapper">
     <div class="logout-card">
-        <div class="logout-icon">
-            <span class="glyphicon glyphicon-ok"></span>
-        </div>
 
-        <h1>Thanks for stopping by</h1>
-        <p>You have been logged out successfully.</p>
+        <div class="logout-icon">✓</div>
 
-        <a href="index.php" class="logout-btn">Back to Home</a>
+        <h2>Logged Out Successfully</h2>
+        <p>Redirecting to login page...</p>
+
+        <a href="index.php" class="logout-btn">Go Now</a>
+
     </div>
 </div>
+
 </body>
 </html>

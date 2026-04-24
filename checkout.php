@@ -1,23 +1,26 @@
 <?php
-// include database configuration file
+session_start();
+
 include 'dbConfig.php';
-
-// initializ shopping cart class
 include 'Cart.php';
+
 $cart = new Cart;
-if ( $_SESSION['logged_in'] != 1 ) {
-  $_SESSION['message'] = "You must log in before viewing your cart!";
-  header("location: error.php");
+
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 1) {
+    $_SESSION['message'] = "You must log in before viewing your cart!";
+    header("location: error.php");
+    exit();
 }
-// redirect to home if cart is empty
-else if($cart->total_items() <= 0){
+
+if ($cart->total_items() <= 0) {
     header("Location: home.php");
+    exit();
 }
 
-
-// get customer details by session customer ID
-$query = $db->query("SELECT * FROM customers WHERE id = ".$_SESSION['sessCustomerID']);
+$query = $db->query("SELECT * FROM customers WHERE id = " . $_SESSION['sessCustomerID']);
 $custRow = $query->fetch_assoc();
+
+$first_name = $_SESSION['first_name'] ?? $custRow['first_name'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -25,66 +28,134 @@ $custRow = $query->fetch_assoc();
     <title>Checkout</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="./js/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <style>
-    .container{width: 100%;padding: 50px;}
-    .table{width: 65%;float: left;}
-    .shipAddr{width: 30%;float: left;margin-left: 30px;}
-    .footBtn{width: 95%;float: left;}
-    .orderBtn {float: right;}
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<div class="container">
-    <h1>Order Preview</h1>
-    <table class="table">
-    <thead>
-        <tr>
-            <th>Product</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Subtotal</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        if($cart->total_items() > 0){
-            //get cart items from session
-            $cartItems = $cart->contents();
-            foreach($cartItems as $item){
-        ?>
-        <tr>
-            <td><?php echo $item["name"]; ?></td>
-            <td><?php echo 'Rs. '.$item["price"]; ?></td>
-            <td><?php echo $item["qty"]; ?></td>
-            <td><?php echo 'Rs. '.$item["subtotal"]; ?></td>
-        </tr>
-        <?php } }else{ ?>
-        <tr><td colspan="4"><p>No items in your cart......</p></td>
-        <?php } ?>
-    </tbody>
-    <tfoot>
-        <tr>
-            <td colspan="3"></td>
-            <?php if($cart->total_items() > 0){ ?>
-            <td class="text-center"><strong>Total <?php echo 'Rs. '.$cart->total(); ?></strong></td>
-            <?php } ?>
-        </tr>
-    </tfoot>
-    </table>
-    <div class="shipAddr">
-        <h4>Shipping Details</h4>
-        <p><?php echo $custRow['first_name'].' '.$custRow['last_name']; ?></p>
-        <p><?php echo $custRow['email']; ?></p>
-        <p><?php echo $custRow['phone']; ?></p>
-        <p><?php echo $custRow['address']; ?></p>
-    </div>
-    <div class="footBtn">
-        <a href="index.php" class="btn btn-warning"><i class="glyphicon glyphicon-menu-left"></i> Continue Shopping</a>
-        <a href="cartAction.php?action=placeOrder" class="btn btn-success orderBtn">Place Order <i class="glyphicon glyphicon-menu-right"></i></a>
-    </div>
+<div class="dashboard">
+
+    <aside class="sidebar">
+        <div class="brand">E commerce</div>
+
+        <a href="home.php">
+            <i class="glyphicon glyphicon-th-large"></i> Product
+        </a>
+
+        <a href="viewCart.php">
+            <i class="glyphicon glyphicon-shopping-cart"></i> Cart
+        </a>
+
+        <a href="profile.php">
+            <i class="glyphicon glyphicon-user"></i> Profile
+        </a>
+
+        <a href="logout.php">
+            <i class="glyphicon glyphicon-log-out"></i> Logout
+        </a>
+    </aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <h2 class="section-title">Checkout</h2>
+
+            <div class="top-actions">
+                <a href="viewCart.php" class="cart-pill">
+                    <i class="glyphicon glyphicon-shopping-cart"></i>
+                    Cart: <?= $cart->total_items(); ?>
+                </a>
+
+                <div class="user-pill">
+                    <i class="glyphicon glyphicon-user"></i>
+                    <?= htmlspecialchars($first_name) ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="checkout-grid">
+
+            <div class="checkout-card">
+                <h3 class="checkout-title">Order Preview</h3>
+
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    <?php if ($cart->total_items() > 0): ?>
+                        <?php $cartItems = $cart->contents(); ?>
+                        <?php foreach ($cartItems as $item): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($item["name"]); ?></td>
+                                <td>₱<?= htmlspecialchars($item["price"]); ?></td>
+                                <td><?= htmlspecialchars($item["qty"]); ?></td>
+                                <td>₱<?= htmlspecialchars($item["subtotal"]); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="4" class="empty-cart">No items in your cart......</td>
+                        </tr>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+
+                <div class="checkout-total">
+                    <span>Total</span>
+                    <strong>₱<?= htmlspecialchars($cart->total()); ?></strong>
+                </div>
+            </div>
+
+            <div class="shipping-card">
+                <h3 class="checkout-title">Shipping Details</h3>
+
+                <div class="shipping-info">
+                    <div>
+                        <span>Name</span>
+                        <strong><?= htmlspecialchars($custRow['first_name'] . ' ' . $custRow['last_name']); ?></strong>
+                    </div>
+
+                    <div>
+                        <span>Email</span>
+                        <strong><?= htmlspecialchars($custRow['email']); ?></strong>
+                    </div>
+
+                    <div>
+                        <span>Phone</span>
+                        <strong><?= htmlspecialchars($custRow['phone']); ?></strong>
+                    </div>
+
+                    <div>
+                        <span>Address</span>
+                        <strong><?= htmlspecialchars($custRow['address']); ?></strong>
+                    </div>
+                </div>
+
+                <a href="cartAction.php?action=placeOrder" class="place-order-btn">
+                    Place Order →
+                </a>
+            </div>
+
+        </div>
+
+        <div class="checkout-actions">
+            <a href="home.php" class="continue-btn">
+                ← Continue Shopping
+            </a>
+        </div>
+
+    </main>
+
 </div>
 </body>
 </html>

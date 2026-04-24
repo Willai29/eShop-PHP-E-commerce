@@ -375,6 +375,10 @@ if ($search !== '') {
             <i class="fa fa-user"></i> Profile
         </a>
 
+        <a href="myOrders.php">
+           <i class="glyphicon glyphicon-list-alt"></i> My Orders
+        </a>
+
         <a href="logout.php">
             <i class="fa fa-sign-out"></i> Logout
         </a>
