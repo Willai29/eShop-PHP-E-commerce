@@ -73,9 +73,7 @@ if ($search !== '') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -191,12 +189,6 @@ if ($search !== '') {
             padding: 10px 16px;
             border-radius: 16px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-            font-weight: 600;
-        }
-
-        .logout-link {
-            color: #777;
-            text-decoration: none;
             font-weight: 600;
         }
 
@@ -376,7 +368,7 @@ if ($search !== '') {
         </a>
 
         <a href="myOrders.php">
-           <i class="glyphicon glyphicon-list-alt"></i> My Orders
+            <i class="glyphicon glyphicon-list-alt"></i> My Orders
         </a>
 
         <a href="logout.php">
@@ -462,8 +454,9 @@ if ($search !== '') {
                                 </div>
 
                                 <?php if ($qty > 0): ?>
-                                    <a class="buy-btn"
-                                       href="cartAction.php?action=addToCart&id=<?= urlencode((string)($row["id"] ?? '')) ?>">
+                                    <a href="#"
+                                       class="buy-btn add-to-cart-btn"
+                                       data-id="<?= urlencode((string)($row["id"] ?? '')) ?>">
                                         Buy now
                                     </a>
                                 <?php else: ?>
@@ -482,6 +475,30 @@ if ($search !== '') {
     </main>
 
 </div>
+
+<script>
+document.querySelectorAll('.add-to-cart-btn').forEach(function(button) {
+    button.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        let productId = this.getAttribute('data-id');
+
+        fetch('cartAction.php?action=addToCart&id=' + productId + '&ajax=1')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Product has been added to cart!');
+                    location.reload();
+                } else {
+                    alert(data.message || 'Failed to add product to cart.');
+                }
+            })
+            .catch(() => {
+                alert('Something went wrong.');
+            });
+    });
+});
+</script>
 
 </body>
 </html>

@@ -6,11 +6,21 @@ $cart = new Cart;
 
 include 'dbConfig.php';
 
+function respondAjax($status, $message) {
+    if (isset($_GET['ajax']) && $_GET['ajax'] == 1) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            "status" => $status,
+            "message" => $message
+        ]);
+        exit();
+    }
+}
+
 function getInventoryProductById($productID) {
     $apiUrl = "http://host.docker.internal:5000/api/products";
 
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $apiUrl);
+    $ch = curl_init($apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
@@ -46,7 +56,7 @@ function deductInventoryQuantity($productID, $qty = 1) {
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
 
-    $response = curl_exec($ch);
+    curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
     curl_close($ch);
@@ -61,13 +71,17 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
         $productID = (int)$_REQUEST['id'];
         $row = getInventoryProductById($productID);
 
-        if ($row === null) {
-            header("Location: home.php");
+        if ($row === null || (int)$row['quantity'] <= 0) {
+            respondAjax("error", "Product is out of stock.");
+            header("Location: home.php?error=out_of_stock");
             exit();
         }
 
-        if ((int)$row['quantity'] <= 0) {
-            header("Location: home.php");
+        $deductSuccess = deductInventoryQuantity($productID, 1);
+
+        if (!$deductSuccess) {
+            respondAjax("error", "Failed to deduct inventory quantity.");
+            header("Location: home.php?error=deduct_failed");
             exit();
         }
 
@@ -81,7 +95,9 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
         $insertItem = $cart->insert($itemData);
 
         if ($insertItem) {
-            deductInventoryQuantity($productID, 1);
+            respondAjax("success", "Product has been added to cart.");
+        } else {
+            respondAjax("error", "Failed to add product to cart.");
         }
 
         header("Location: " . ($insertItem ? "viewCart.php" : "home.php"));
@@ -103,6 +119,41 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
         $cart->remove($_REQUEST['id']);
         header("Location: viewCart.php");
         exit();
+
+    } elseif ($_REQUEST['action'] == 'placeOrder' && $cart->total_items() > 0 && !empty($_SESSION['sessCustomerID'])) {
+
+        $customerID = $_SESSION['sessCustomerID'];
+        $total = $cart->total();
+        $created = date("Y-m-d H:i:s");
+
+        $insertOrder = $db->query("
+            INSERT INTO orders (customer_id, total_price, created, modified)
+            VALUES ('$customerID', '$total', '$created', '$created')
+        ");
+
+        if ($insertOrder) {
+            $orderID = $db->insert_id;
+            $cartItems = $cart->contents();
+
+            foreach ($cartItems as $item) {
+                $productID = $item['id'];
+                $qty = $item['qty'];
+
+                $db->query("
+                    INSERT INTO order_items (order_id, product_id, quantity)
+                    VALUES ('$orderID', '$productID', '$qty')
+                ");
+            }
+
+            $cart->destroy();
+
+            header("Location: orderSuccess.php?id=$orderID");
+            exit();
+
+        } else {
+            header("Location: checkout.php");
+            exit();
+        }
 
     } else {
         header("Location: home.php");

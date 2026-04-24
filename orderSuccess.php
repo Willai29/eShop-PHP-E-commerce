@@ -3,6 +3,7 @@ session_start();
 require 'db.php';
 
 $orderID = $_GET['id'] ?? '';
+$first_name = $_SESSION['first_name'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,14 +14,14 @@ $orderID = $_GET['id'] ?? '';
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <style>
-        .success-wrapper {
-            min-height: 100vh;
+        .success-area {
+            min-height: 70vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 30px;
         }
 
         .success-card {
@@ -107,33 +108,80 @@ $orderID = $_GET['id'] ?? '';
 </head>
 
 <body>
-<div class="success-wrapper">
-    <div class="success-card">
+<div class="dashboard">
 
-        <div class="success-icon">
-            <span class="glyphicon glyphicon-ok"></span>
+    <aside class="sidebar">
+        <div class="brand">E commerce</div>
+
+        <a href="home.php">
+            <i class="fa fa-th-large"></i> Product
+        </a>
+
+        <a href="viewCart.php">
+            <i class="fa fa-shopping-cart"></i> Cart
+        </a>
+
+        <a href="myOrders.php" class="active">
+            <i class="fa fa-list-alt"></i> My Orders
+        </a>
+
+        <a href="profile.php">
+            <i class="fa fa-user"></i> Profile
+        </a>
+
+        <a href="logout.php">
+            <i class="fa fa-sign-out"></i> Logout
+        </a>
+    </aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <h2 class="section-title">Order Success</h2>
+
+            <div class="top-actions">
+                <a href="viewCart.php" class="cart-pill">
+                    <i class="fa fa-shopping-cart"></i> Cart
+                </a>
+
+                <div class="user-pill">
+                    <i class="fa fa-user-circle"></i>
+                    <?= htmlspecialchars($first_name) ?>
+                </div>
+            </div>
         </div>
 
-        <h1>Order Placed!</h1>
+        <div class="success-area">
+            <div class="success-card">
 
-        <p>Your order has been placed successfully.</p>
-        <p>Thank you for shopping with us.</p>
+                <div class="success-icon">
+                    <span class="glyphicon glyphicon-ok"></span>
+                </div>
 
-        <div class="order-id-box">
-            Order ID: #<?= htmlspecialchars($orderID) ?>
+                <h1>Order Placed!</h1>
+
+                <p>Your order has been placed successfully.</p>
+                <p>You can now check it in your My Orders page.</p>
+
+                <div class="order-id-box">
+                    Order ID: #<?= htmlspecialchars($orderID) ?>
+                </div>
+
+                <div class="success-actions">
+                    <a href="home.php" class="success-btn secondary-btn">
+                        Continue Shopping
+                    </a>
+
+                    <a href="myOrders.php" class="success-btn primary-btn">
+                        View My Orders →
+                    </a>
+                </div>
+
+            </div>
         </div>
 
-        <div class="success-actions">
-            <a href="home.php" class="success-btn secondary-btn">
-                Continue Shopping
-            </a>
+    </main>
 
-            <a href="cartAction.php?action=placeOrder1" class="success-btn primary-btn">
-                Go to Review →
-            </a>
-        </div>
-
-    </div>
 </div>
 </body>
 </html>
