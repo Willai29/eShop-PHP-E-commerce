@@ -62,7 +62,7 @@ if ($search !== '') {
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Welcome <?= htmlspecialchars(trim($first_name . ' ' . $last_name)) ?></title>
+    <title>E-Shop Products</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -73,215 +73,410 @@ if ($search !== '') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #eeeeee;
+            margin: 0;
+            background: #f4f6fb;
+            font-family: Arial, sans-serif;
+            color: #222;
         }
 
-        .container {
-            padding: 0;
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+            padding: 30px;
+            gap: 28px;
         }
 
-        .navbar {
-            font-size: 17px;
-            border-radius: 0;
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #5026ff, #8064ff);
+            color: #fff;
+            border-radius: 28px;
+            padding: 30px 22px;
+            box-shadow: 0 20px 40px rgba(80, 38, 255, 0.25);
+            position: sticky;
+            top: 30px;
+            height: calc(100vh - 60px);
         }
 
-        .badge {
-            font-size: 17px;
+        .brand {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 38px;
         }
 
-        .search-box {
-            margin-top: 15px;
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #eee;
+            padding: 13px 14px;
+            margin-bottom: 10px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
         }
 
-        .search-box input {
-            width: 80%;
-            height: 28px;
-            color: #000;
-            border-radius: 8px;
-            border: 1px solid #333;
-            padding: 5px 10px;
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #ffffff;
+            color: #5026ff;
+        }
+
+        .main {
+            flex: 1;
+            background: rgba(255,255,255,0.65);
+            border-radius: 30px;
+            padding: 28px;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.08);
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            display: flex;
+            width: 420px;
+            background: #fff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+        }
+
+        .search-form input {
+            border: none;
+            outline: none;
+            padding: 13px 16px;
+            flex: 1;
+            color: #222;
+            background: #fff;
+        }
+
+        .search-form button {
+            width: 58px;
+            border: none;
+            background: #7b61ff;
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .cart-pill {
+            background: #fff;
+            color: #222;
+            padding: 10px 16px;
+            border-radius: 16px;
+            text-decoration: none;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            font-weight: 600;
+        }
+
+        .user-pill {
+            background: #fff;
+            padding: 10px 16px;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            font-weight: 600;
+        }
+
+        .logout-link {
+            color: #777;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 10px 0 24px;
         }
 
         .products-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 260px));
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
             gap: 24px;
-            align-items: stretch;
         }
 
         .product-card {
             background: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            border-radius: 20px;
             overflow: hidden;
-            min-height: 430px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            transition: 0.25s ease;
             display: flex;
             flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 35px rgba(0,0,0,0.14);
         }
 
         .product-image {
             width: 100%;
-            height: 270px;
+            height: 210px;
             object-fit: cover;
-            display: block;
+            background: #f2f2f2;
         }
 
         .no-image {
-            width: 100%;
-            height: 270px;
-            background: #ddd;
+            height: 210px;
+            background: #e9e9e9;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #555;
+            color: #777;
+            font-weight: 600;
         }
 
-        .product-card .caption {
-            padding: 10px;
-            flex: 1;
+        .product-info {
+            padding: 16px;
             display: flex;
             flex-direction: column;
+            flex: 1;
         }
 
-        .product-card h4 {
-            margin: 0 0 5px 0;
-            color: #000;
-            text-align: left;
+        .product-info h4 {
+            font-size: 17px;
+            font-weight: 700;
+            margin: 0 0 6px;
         }
 
-        .product-card p {
-            color: #000;
-            text-align: left;
-            margin: 3px 0;
+        .product-desc {
+            color: #777;
+            font-size: 13px;
+            margin-bottom: 10px;
         }
 
-        .product-card .lead {
-            font-size: 18px;
-            margin-top: 8px;
-        }
-
-        .product-card .btn {
-            margin-top: auto;
+        .qty-badge {
+            display: inline-block;
             width: fit-content;
+            background: #f0ebff;
+            color: #6b4cff;
+            padding: 5px 11px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: auto;
+            gap: 10px;
+        }
+
+        .price {
+            font-size: 19px;
+            font-weight: 800;
+            color: #222;
+        }
+
+        .buy-btn {
+            background: #7b61ff;
+            color: #fff;
+            border-radius: 18px;
+            padding: 8px 14px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .buy-btn:hover {
+            background: #6248e8;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .out-btn {
+            background: #ddd;
+            color: #777;
+            border-radius: 18px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+        }
+
+        .alert-box {
+            background: #ffecec;
+            color: #c0392b;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .empty-message {
+            background: #fff;
+            padding: 24px;
+            border-radius: 18px;
+            color: #777;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard {
+                flex-direction: column;
+                padding: 15px;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                top: 0;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-form {
+                width: 100%;
+            }
         }
     </style>
 </head>
 
 <body>
-<nav class="navbar navbar-inverse">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <a class="navbar-brand" href="#">E-Shop</a>
-        </div>
 
-        <ul class="nav navbar-nav">
-            <li class="active"><a href="home.php">Home</a></li>
-        </ul>
+<div class="dashboard">
 
-        <ul class="nav navbar-nav navbar-right">
-            <li>
-                <a href="profile.php">
-                    <span class="glyphicon glyphicon-user"></span>
+    <aside class="sidebar">
+        <div class="brand">E commerce</div>
+
+        <a href="home.php" class="active">
+            <i class="fa fa-th-large"></i> Product
+        </a>
+
+        <a href="viewCart.php">
+            <i class="fa fa-shopping-cart"></i> Cart
+        </a>
+
+        <a href="profile.php">
+            <i class="fa fa-user"></i> Profile
+        </a>
+
+        <a href="logout.php">
+            <i class="fa fa-sign-out"></i> Logout
+        </a>
+    </aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <form action="" method="post" class="search-form">
+                <input
+                    type="text"
+                    name="search"
+                    value="<?= htmlspecialchars($search) ?>"
+                    placeholder="Search product..."
+                >
+                <button type="submit">
+                    <i class="fa fa-search"></i>
+                </button>
+            </form>
+
+            <div class="top-actions">
+                <a href="viewCart.php" class="cart-pill">
+                    <i class="fa fa-shopping-cart"></i>
+                    Cart: <?= $cart->total_items(); ?>
+                </a>
+
+                <div class="user-pill">
+                    <i class="fa fa-user-circle"></i>
                     <?= htmlspecialchars($first_name) ?>
-                </a>
-            </li>
-
-            <li>
-                <a href="logout.php">
-                    <span class="glyphicon glyphicon-log-out"></span> Logout
-                </a>
-            </li>
-
-            <li>
-                <a href="viewCart.php">
-                    <span class="glyphicon glyphicon-shopping-cart"></span>
-                    Cart:
-                    <span class="badge"><?= $cart->total_items(); ?></span>
-                </a>
-            </li>
-        </ul>
-    </div>
-</nav>
-
-<div class="container">
-    <form action="" method="post" class="search-box">
-        <input
-            type="text"
-            name="search"
-            value="<?= htmlspecialchars($search) ?>"
-            placeholder="Is it me you’re looking for?"
-        >
-        <button type="submit" style="border:none;">
-            <i class="fa fa-search"></i>
-        </button>
-    </form>
-
-    <br>
-    <h3>Products</h3>
-    <br>
-
-    <?php if ($apiError !== ''): ?>
-        <div class="alert alert-danger">
-            <?= htmlspecialchars($apiError) ?>
-        </div>
-    <?php endif; ?>
-
-    <div id="products" class="products-container">
-        <?php if (!empty($products)): ?>
-            <?php foreach ($products as $row): ?>
-
-                <?php
-                $imageSrc = '';
-
-                if (!empty($row["image_url"])) {
-                    $imageSrc = $row["image_url"];
-                } elseif (!empty($row["image"])) {
-                    $imageSrc = "data:image/jpeg;base64," . $row["image"];
-                }
-                ?>
-
-                <div class="product-card">
-                    <?php if (!empty($imageSrc)): ?>
-                        <img
-                            class="product-image"
-                            src="<?= htmlspecialchars($imageSrc) ?>"
-                            alt="<?= htmlspecialchars($row["name"] ?? '') ?>"
-                        >
-                    <?php else: ?>
-                        <div class="no-image">No Image</div>
-                    <?php endif; ?>
-
-                    <div class="caption">
-                        <h4><?= htmlspecialchars($row["name"] ?? '') ?></h4>
-
-                        <p>Inventory product</p>
-
-                        <p>
-                            <strong>Quantity:</strong>
-                            <?= htmlspecialchars((string)($row["quantity"] ?? '0')) ?>
-                        </p>
-
-                        <p class="lead">
-                            Rs. <?= htmlspecialchars((string)($row["price"] ?? '0')) ?>
-                        </p>
-
-                        <?php if (($row["quantity"] ?? 0) > 0): ?>
-                            <a class="btn btn-success"
-                               href="cartAction.php?action=addToCart&id=<?= urlencode((string)($row["id"] ?? '')) ?>">
-                                Add to cart
-                            </a>
-                        <?php else: ?>
-                            <button class="btn btn-danger" disabled>Out of stock</button>
-                        <?php endif; ?>
-                    </div>
                 </div>
+            </div>
+        </div>
 
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p style="color:#000;">Product(s) not found.....</p>
+        <h2 class="section-title">Product</h2>
+
+        <?php if ($apiError !== ''): ?>
+            <div class="alert-box">
+                <?= htmlspecialchars($apiError) ?>
+            </div>
         <?php endif; ?>
-    </div>
+
+        <div id="products" class="products-container">
+            <?php if (!empty($products)): ?>
+                <?php foreach ($products as $row): ?>
+
+                    <?php
+                    $imageSrc = '';
+
+                    if (!empty($row["image_url"])) {
+                        $imageSrc = $row["image_url"];
+                    } elseif (!empty($row["image"])) {
+                        $imageSrc = "data:image/jpeg;base64," . $row["image"];
+                    }
+
+                    $qty = (int)($row["quantity"] ?? 0);
+                    ?>
+
+                    <div class="product-card">
+                        <?php if (!empty($imageSrc)): ?>
+                            <img
+                                class="product-image"
+                                src="<?= htmlspecialchars($imageSrc) ?>"
+                                alt="<?= htmlspecialchars($row["name"] ?? '') ?>"
+                            >
+                        <?php else: ?>
+                            <div class="no-image">No Image</div>
+                        <?php endif; ?>
+
+                        <div class="product-info">
+                            <h4><?= htmlspecialchars($row["name"] ?? '') ?></h4>
+
+                            <div class="product-desc">Inventory product</div>
+
+                            <span class="qty-badge">
+                                Quantity: <?= htmlspecialchars((string)$qty) ?>
+                            </span>
+
+                            <div class="price-row">
+                                <div class="price">
+                                    ₱<?= htmlspecialchars((string)($row["price"] ?? '0')) ?>
+                                </div>
+
+                                <?php if ($qty > 0): ?>
+                                    <a class="buy-btn"
+                                       href="cartAction.php?action=addToCart&id=<?= urlencode((string)($row["id"] ?? '')) ?>">
+                                        Buy now
+                                    </a>
+                                <?php else: ?>
+                                    <button class="out-btn" disabled>Out</button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="empty-message">Product(s) not found.....</div>
+            <?php endif; ?>
+        </div>
+
+    </main>
+
 </div>
 
 </body>
