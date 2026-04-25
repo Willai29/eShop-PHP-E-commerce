@@ -1,37 +1,29 @@
 <?php
-// initializ shopping cart class
+session_start();
+
 include 'Cart.php';
 $cart = new Cart;
-if ( $_SESSION['logged_in'] != 1 ) {
-  $_SESSION['message'] = "You must log in before viewing your profile!";
-  header("location: error.php");
+
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 1) {
+    $_SESSION['message'] = "You must log in before viewing your cart!";
+    header("location: error.php");
+    exit();
 }
-else {
-    // Makes it easier to read
-    $first_name = $_SESSION['first_name'];
-    $last_name = $_SESSION['last_name'];
-    $email = $_SESSION['email'];
-    $active = $_SESSION['active'];
-    $address = $_SESSION['address'];
-    $phone = $_SESSION['phone'];
-}
+
+$first_name = $_SESSION['first_name'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <title>View Cart</title>
     <meta charset="utf-8">
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
     <script src="./js/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <style>
-    .container{padding: 0px;}
-    body{ background-color: #EEEEEE}
-    .glyphicon .badge .navbar{font-size: 17px;}
-    .navbar{font-size: 17px;}
-    .badge{font-size: 17px;}
-    input[type="number"]{width: 20%;}
-    </style>
+
     <script>
     function updateCartItem(obj,id){
         $.get("cartAction.php", {action:"updateCartItem", id:id, qty:obj.value}, function(data){
@@ -44,71 +36,121 @@ else {
     }
     </script>
 </head>
-</head>
+
 <body>
-  <nav class="navbar navbar-inverse"  style="border-radius: 0px;">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">E-Shop</a>
-      </div>
-      <ul class="nav navbar-nav">
-        <li class="active"><a href="home.php">Home</a></li>
-        <li><a href="#">Page</a></li>
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="profile.php"><span class="glyphicon glyphicon-user"></span> <?= $first_name?></a></li>
-        <li><a href="logout.php"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
-        <li><a href="viewCart.php" title="View Cart">
-          <span class="glyphicon glyphicon-shopping-cart"></span> Cart:
-          <span class="badge"><?php echo $cart->total_items();?></span>
-        </a></li>
-      </ul>
-    </div>
-  </nav>
-<div class="container">
-    <h1>Shopping Cart</h1>
-    <table class="table">
-    <thead>
-        <tr>
-            <th>Product</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Subtotal</th>
-            <th>&nbsp;</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        if($cart->total_items() > 0){
-            //get cart items from session
-            $cartItems = $cart->contents();
-            foreach($cartItems as $item){
-        ?>
-        <tr>
-            <td><?php echo $item["name"]; ?></td>
-            <td><?php echo 'Rs.'.$item["price"]; ?></td>
-            <td><input type="number" class="form-control text-center" value="<?php echo $item["qty"]; ?>" onchange="updateCartItem(this, '<?php echo $item["rowid"]; ?>')"></td>
-            <td><?php echo 'Rs.'.$item["subtotal"]; ?></td>
-            <td>
-                <!--<a href="cartAction.php?action=updateCartItem&id=" class="btn btn-info"><i class="glyphicon glyphicon-refresh"></i></a>-->
-                <a href="cartAction.php?action=removeCartItem&id=<?php echo $item["rowid"]; ?>" class="btn btn-danger" onclick="return confirm('Are you sure?')"><i class="glyphicon glyphicon-trash"></i></a>
-            </td>
-        </tr>
-        <?php } }else{ ?>
-        <tr><td colspan="5"><p>Your cart is empty.....</p></td>
-        <?php } ?>
-    </tbody>
-    <tfoot>
-        <tr>
-            <td><a href="home.php" class="btn btn-warning"><i class="glyphicon glyphicon-menu-left"></i> Continue Shopping</a></td>
-            <td colspan="2"></td>
-            <?php if($cart->total_items() > 0){ ?>
-            <td class="text-center"><strong>Total <?php echo 'Rs.'.$cart->total(); ?></strong></td>
-            <td><a href="checkout.php" class="btn btn-success btn-block">Checkout <i class="glyphicon glyphicon-menu-right"></i></a></td>
-            <?php } ?>
-        </tr>
-    </tfoot>
-    </table>
+<div class="dashboard">
+
+    <aside class="sidebar">
+        <div class="brand">E commerce</div>
+
+        <a href="home.php">
+            <i class="fa fa-th-large"></i> Product
+        </a>
+
+        <a href="viewCart.php" class="active">
+            <i class="fa fa-shopping-cart"></i> Cart
+        </a>
+
+        <a href="myOrders.php">
+            <i class="fa fa-list-alt"></i> My Orders
+        </a>
+
+        <a href="profile.php">
+            <i class="fa fa-user"></i> Profile
+        </a>
+
+        <a href="logout.php">
+            <i class="fa fa-sign-out"></i> Logout
+        </a>
+    </aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <h2 class="section-title">Shopping Cart</h2>
+
+            <div class="top-actions">
+                <a href="viewCart.php" class="cart-pill">
+                    <i class="fa fa-shopping-cart"></i>
+                    Cart: <?= $cart->total_items(); ?>
+                </a>
+
+                <div class="user-pill">
+                    <i class="fa fa-user-circle"></i>
+                    <?= htmlspecialchars($first_name) ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="cart-card">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <?php if($cart->total_items() > 0): ?>
+                        <?php $cartItems = $cart->contents(); ?>
+                        <?php foreach($cartItems as $item): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($item["name"]); ?></td>
+                                <td>₱<?= htmlspecialchars($item["price"]); ?></td>
+                                <td>
+                                    <input 
+                                        type="number" 
+                                        class="cart-qty" 
+                                        value="<?= htmlspecialchars($item["qty"]); ?>" 
+                                        min="1"
+                                        onchange="updateCartItem(this, '<?= htmlspecialchars($item["rowid"]); ?>')"
+                                    >
+                                </td>
+                                <td>₱<?= htmlspecialchars($item["subtotal"]); ?></td>
+                                <td>
+                                    <a 
+                                        href="cartAction.php?action=removeCartItem&id=<?= htmlspecialchars($item["rowid"]); ?>" 
+                                        class="remove-btn" 
+                                        onclick="return confirm('Are you sure?')"
+                                    >
+                                        Remove
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="empty-cart">
+                                Your cart is empty.....
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <div class="cart-footer">
+                <a href="home.php" class="continue-btn">
+                    ← Continue Shopping
+                </a>
+
+                <?php if($cart->total_items() > 0): ?>
+                    <div class="cart-total">
+                        Total: ₱<?= htmlspecialchars($cart->total()); ?>
+                    </div>
+
+                    <a href="checkout.php" class="checkout-btn">
+                        Checkout →
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+
+    </main>
+
 </div>
 </body>
 </html>

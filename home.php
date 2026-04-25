@@ -363,12 +363,12 @@ if ($search !== '') {
             <i class="fa fa-shopping-cart"></i> Cart
         </a>
 
-        <a href="profile.php">
-            <i class="fa fa-user"></i> Profile
+         <a href="myOrders.php">
+            <i class="glyphicon glyphicon-list-alt"></i> My Orders
         </a>
 
-        <a href="myOrders.php">
-            <i class="glyphicon glyphicon-list-alt"></i> My Orders
+        <a href="profile.php">
+            <i class="fa fa-user"></i> Profile
         </a>
 
         <a href="logout.php">

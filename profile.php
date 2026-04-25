@@ -42,6 +42,10 @@ $phone      = $_SESSION['phone'] ?? '';
             <i class="glyphicon glyphicon-shopping-cart"></i> Cart
         </a>
 
+        <a href="myOrders.php">
+            <i class="glyphicon glyphicon-list-alt"></i> My Orders
+        </a>
+
         <a href="profile.php" class="active">
             <i class="glyphicon glyphicon-user"></i> Profile
         </a>

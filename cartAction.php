@@ -27,15 +27,10 @@ function getInventoryProductById($productID) {
     $response = curl_exec($ch);
     curl_close($ch);
 
-    if (!$response) {
-        return null;
-    }
+    if (!$response) return null;
 
     $products = json_decode($response, true);
-
-    if (!is_array($products)) {
-        return null;
-    }
+    if (!is_array($products)) return null;
 
     foreach ($products as $product) {
         if (isset($product['id']) && (int)$product['id'] === (int)$productID) {
@@ -57,6 +52,39 @@ function deductInventoryQuantity($productID, $qty = 1) {
     curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
 
     curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return $httpCode === 200;
+}
+
+function sendOrderToInventory($orderID, $customerID, $total, $cartItems) {
+    $url = "http://host.docker.internal:5000/api/order";
+
+    $payload = [
+        "order_id" => $orderID,
+        "customer_id" => $customerID,
+        "total" => $total,
+        "items" => []
+    ];
+
+    foreach ($cartItems as $item) {
+        $payload["items"][] = [
+            "product_id" => $item["id"],
+            "name" => $item["name"],
+            "qty" => $item["qty"],
+            "price" => $item["price"]
+        ];
+    }
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
+
+    $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
     curl_close($ch);
@@ -144,6 +172,8 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
                     VALUES ('$orderID', '$productID', '$qty')
                 ");
             }
+
+            sendOrderToInventory($orderID, $customerID, $total, $cartItems);
 
             $cart->destroy();
 
