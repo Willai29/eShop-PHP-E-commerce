@@ -2,6 +2,8 @@
 session_start();
 
 include 'Cart.php';
+include 'dbConfig.php';
+
 $cart = new Cart();
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != 1) {
@@ -15,6 +17,43 @@ $last_name  = $_SESSION['last_name'] ?? '';
 $email      = $_SESSION['email'] ?? '';
 $address    = $_SESSION['address'] ?? '';
 $phone      = $_SESSION['phone'] ?? '';
+
+$customerID = $_SESSION['sessCustomerID'] ?? 0;
+
+/* ===============================
+   YOUR EXISTING QUERY (UNCHANGED)
+================================ */
+$orders = $db->query("
+    SELECT 
+        o.id AS order_id,
+        oi.product_id,
+        oi.quantity,
+        o.total_price,
+        o.created,
+        'Ordered' AS status
+    FROM orders o
+    INNER JOIN order_items oi ON o.id = oi.order_id
+    WHERE o.customer_id = '$customerID'
+    ORDER BY o.id DESC
+");
+
+/* ===============================
+   ✅ ADDED: GET PRODUCT NAMES FROM API
+================================ */
+$productNames = [];
+
+$apiUrl = "http://host.docker.internal:5000/api/products";
+$response = @file_get_contents($apiUrl);
+
+if ($response) {
+    $apiProducts = json_decode($response, true);
+
+    if (is_array($apiProducts)) {
+        foreach ($apiProducts as $p) {
+            $productNames[$p['id']] = $p['name'];
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -137,11 +176,37 @@ $phone      = $_SESSION['phone'] ?? '';
                     </thead>
 
                     <tbody>
-                        <tr>
-                            <td colspan="5" class="empty-cart">
-                                No orders found yet.
-                            </td>
-                        </tr>
+                        <?php if ($orders && $orders->num_rows > 0): ?>
+                            <?php while ($order = $orders->fetch_assoc()): ?>
+                                <tr>
+                                    <td>#<?= htmlspecialchars($order['order_id']) ?></td>
+
+                                    <!-- ✅ UPDATED: SHOW PRODUCT NAME -->
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $productNames[$order['product_id']] 
+                                            ?? 'Product ID: ' . $order['product_id']
+                                        ) ?>
+                                    </td>
+
+                                    <td><?= htmlspecialchars($order['quantity']) ?></td>
+
+                                    <td>₱<?= htmlspecialchars($order['total_price']) ?></td>
+
+                                    <td>
+                                        <span style="background:#f0ebff;color:#6b4cff;padding:5px 10px;border-radius:15px;font-weight:700;">
+                                            <?= htmlspecialchars($order['status']) ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="empty-cart">
+                                    No orders found yet.
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
