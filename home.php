@@ -281,6 +281,8 @@ if ($search !== '') {
             color: #222;
         }
 
+        /* Button styling for both "Add to Cart" and "Buy Now" */
+        .add-to-cart-btn,
         .buy-btn {
             background: #7b61ff;
             color: #fff;
@@ -290,8 +292,12 @@ if ($search !== '') {
             font-size: 12px;
             font-weight: 700;
             transition: 0.2s;
+            text-align: center;
+            width: 100%;
+            display: inline-block;
         }
 
+        .add-to-cart-btn:hover,
         .buy-btn:hover {
             background: #6248e8;
             color: #fff;
@@ -363,7 +369,7 @@ if ($search !== '') {
             <i class="fa fa-shopping-cart"></i> Cart
         </a>
 
-         <a href="myOrders.php">
+        <a href="myOrders.php">
             <i class="glyphicon glyphicon-list-alt"></i> My Orders
         </a>
 
@@ -457,10 +463,12 @@ if ($search !== '') {
 
                                 <?php if ($qty > 0): ?>
                                     <a href="#"
-                                       class="buy-btn add-to-cart-btn"
+                                       class="add-to-cart-btn"
                                        data-id="<?= urlencode((string)($row["id"] ?? '')) ?>">
-                                        Buy now
+                                        Add to Cart
                                     </a>
+                                    <a href="buy_now.php?product_id=<?= urlencode((string)($row["id"] ?? '')) ?>"
+                                       class="buy-btn">Buy Now</a>
                                 <?php else: ?>
                                     <button class="out-btn" disabled>Out</button>
                                 <?php endif; ?>
