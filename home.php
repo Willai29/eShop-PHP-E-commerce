@@ -442,7 +442,9 @@ if ($search !== '') {
                         <div class="product-info">
                             <h4><?= htmlspecialchars($row["name"] ?? '') ?></h4>
 
-                            <div class="product-desc">Inventory product</div>
+                            <div class="product-desc">
+                                <?= htmlspecialchars($row["description"] ?? "No description available") ?>
+                            </div>
 
                             <span class="qty-badge">
                                 Quantity: <?= htmlspecialchars((string)$qty) ?>

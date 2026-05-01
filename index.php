@@ -2,14 +2,18 @@
 require 'db.php';
 session_start();
 
+// Handle POST request for login and register
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['login'])) {
-        require 'login.php';
+        require 'login.php'; // Perform login logic
     } elseif (isset($_POST['register'])) {
-        require 'register.php';
+        require 'register.php'; // Handle registration
+        // After registering, no redirection. Stay on the current page.
+        $_SESSION['register_success'] = true; // Flag to keep the user on the signup page
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -171,33 +175,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         <div class="auth-right">
             <ul class="auth-tabs tab-group">
-                <li class="tab"><a href="#signup">Sign Up</a></li>
-                <li class="tab active"><a href="#login">Log In</a></li>
+                <li class="tab <?php echo isset($_SESSION['register_success']) ? '' : 'active'; ?>"><a href="#signup">Sign Up</a></li>
+                <li class="tab <?php echo isset($_SESSION['register_success']) ? 'active' : ''; ?>"><a href="#login">Log In</a></li>
             </ul>
 
             <div class="auth-content tab-content">
 
-                <div id="login">
+                <!-- Login Form -->
+                <div id="login" <?php echo isset($_SESSION['register_success']) ? 'style="display:block;"' : 'style="display:none;"'; ?>>
                     <h2>Welcome Back!</h2>
-
                     <form action="index.php" method="post" autocomplete="off">
                         <div class="auth-field">
                             <label>Email Address *</label>
                             <input type="email" required autocomplete="off" name="email">
                         </div>
-
                         <div class="auth-field">
                             <label>Password *</label>
                             <input type="password" required autocomplete="off" name="password">
                         </div>
-
                         <button type="submit" class="auth-btn" name="login">Log In</button>
                     </form>
                 </div>
 
-                <div id="signup">
+                <!-- Sign Up Form -->
+                <div id="signup" <?php echo isset($_SESSION['register_success']) ? 'style="display:block;"' : 'style="display:none;"'; ?>>
                     <h2>Create Account</h2>
-
                     <form action="index.php" method="post" autocomplete="off">
                         <div class="auth-row">
                             <div class="auth-field">
@@ -242,6 +244,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="js/index.js"></script>
+<script>
+$(document).ready(function(){
+    // Switch between Sign Up and Log In
+    $('.auth-tabs .tab:first-child a').click(function() {
+        $('#login').hide();
+        $('#signup').show();
+        $('.auth-tabs .tab:first-child').addClass('active');
+        $('.auth-tabs .tab:last-child').removeClass('active');
+    });
+
+    $('.auth-tabs .tab:last-child a').click(function() {
+        $('#signup').hide();
+        $('#login').show();
+        $('.auth-tabs .tab:last-child').addClass('active');
+        $('.auth-tabs .tab:first-child').removeClass('active');
+    });
+
+    // By default, show Sign Up
+    $('#signup').show();
+    $('#login').hide();
+});
+</script>
+
 </body>
 </html>
