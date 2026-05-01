@@ -41,6 +41,7 @@ function getInventoryProductById($productID) {
     return null;
 }
 
+// Redefined the function for deducting inventory quantity
 function deductInventoryQuantity($productID, $qty = 1) {
     $deductUrl = "http://host.docker.internal:5000/api/products/" . $productID . "/deduct";
 
@@ -105,13 +106,8 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
             exit();
         }
 
-        $deductSuccess = deductInventoryQuantity($productID, 1);
-
-        if (!$deductSuccess) {
-            respondAjax("error", "Failed to deduct inventory quantity.");
-            header("Location: home.php?error=deduct_failed");
-            exit();
-        }
+        // Do not deduct inventory when adding to the cart
+        // $deductSuccess = deductInventoryQuantity($productID, 1);
 
         $itemData = array(
             'id'    => $row['id'] ?? $productID,
@@ -163,9 +159,16 @@ if (isset($_REQUEST['action']) && !empty($_REQUEST['action'])) {
             $orderID = $db->insert_id;
             $cartItems = $cart->contents();
 
+            // Deduct inventory quantities only when the order is placed
             foreach ($cartItems as $item) {
                 $productID = $item['id'];
                 $qty = $item['qty'];
+
+                // Deduct product quantity in the inventory
+                $deductSuccess = deductInventoryQuantity($productID, $qty);
+                if (!$deductSuccess) {
+                    // Handle failure if needed (optional)
+                }
 
                 $db->query("
                     INSERT INTO order_items (order_id, product_id, quantity)
