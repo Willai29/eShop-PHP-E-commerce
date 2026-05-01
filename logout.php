@@ -1,6 +1,8 @@
 <?php
 session_start();
+// Clear all session variables
 session_unset();
+// Destroy the session
 session_destroy();
 ?>
 
@@ -10,8 +12,8 @@ session_destroy();
 <meta charset="UTF-8">
 <title>Logging Out...</title>
 
-<!-- Auto redirect after 2 seconds -->
-<meta http-equiv="refresh" content="2;url=index.php">
+<!-- Auto redirect to the login page after 2 seconds -->
+<meta http-equiv="refresh" content="2;url=index.php?login=true">
 
 <link rel="stylesheet" href="styles.css">
 
@@ -74,8 +76,8 @@ session_destroy();
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px);}
-    to { opacity: 1; transform: translateY(0);}
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>
 </head>
@@ -90,7 +92,8 @@ session_destroy();
         <h2>Logged Out Successfully</h2>
         <p>Redirecting to login page...</p>
 
-        <a href="index.php" class="logout-btn">Go Now</a>
+        <!-- User can click this button to manually go to the login page -->
+        <a href="index.php?login=true" class="logout-btn">Go Now</a>
 
     </div>
 </div>
